@@ -384,11 +384,20 @@ class Robo:
         return "\n".join(lin)
 
 
+def public_ip():
+    try:
+        import requests
+        return requests.get("https://api.ipify.org", timeout=10).text.strip()
+    except Exception:  # noqa: BLE001
+        return "?"
+
+
 def main():
     robo = Robo()
     robo.tg.send(f"🤖 Robô iniciado em modo {'SIMULAÇÃO (não envia ordens)' if C.DRY_RUN else 'REAL'}\n"
                  f"{', '.join(s.replace('USDT','') for s in C.SYMBOLS)} · {C.MARGIN_PCT*100:g}% · {C.LEVERAGE}x · máx {C.MAX_POSITIONS}\n"
                  f"Saída: {C.TP1_FRACTION*100:g}% em +{C.TP1_PCT*100:g}% + trailing {C.TRAIL_CALLBACK:g}% · prazo {C.MAX_HOURS:g}h\n"
+                 f"IP deste servidor: {public_ip()}\n"
                  f"Comandos: /status /checklist /pausar /retomar")
     last_sync = time.time()
     while True:

@@ -1,6 +1,6 @@
 # Robô Binance — Futuros USDⓈ-M
 
-Robô 100% automático que segue as regras validadas nos backtests. Roda no Render (serviço "Background Worker"), avisa tudo no Telegram e não precisa de confirmação por ordem.
+Robô 100% automático que segue as regras validadas nos backtests. Roda num servidor com IP fixo, avisa tudo no Telegram e não precisa de confirmação por ordem.
 
 ## As regras
 
@@ -36,45 +36,23 @@ Robô 100% automático que segue as regras validadas nos backtests. Roda no Rend
 
 Se o robô reiniciar, ele volta **despausado**.
 
-## Passo a passo (siga nesta ordem)
+## Passo a passo — servidor com IP fixo (DigitalOcean)
 
-### 1. Bot do Telegram (5 min)
-1. No Telegram, abra **@BotFather** → `/newbot` → escolha um nome → copie o **token**.
-2. Abra o seu bot novo e mande **"oi"** (sem isso ele não consegue te escrever).
-3. Abra **@userinfobot** → ele mostra seu **Id** (um número). Esse é o `TELEGRAM_CHAT_ID`.
+A Binance exige chave com IP fixo para operar; por isso o robô roda num servidor próprio (~US$ 6/mês).
 
-### 2. GitHub (5 min)
-1. No GitHub Desktop: **File → New repository** → nome `robo-binance` → **Create**.
-2. Copie **todos os arquivos desta pasta** para dentro da pasta do repositório.
-3. Faça o **Commit** e depois **Publish repository**, deixando marcado **"Keep this code private"**.
+1. **Telegram** — bot criado no @BotFather + seu ID do @userinfobot.
+2. **DigitalOcean** — Create → Droplets → Ubuntu 24.04 · Frankfurt · Basic/Regular US$ 6 · senha (Password). Anote o **IPv4**.
+3. **Binance** — na subconta do robô: abrir **Futuros** → criar API (Leitura + Futuros, sem saque/transferência) **restrita ao IPv4 do servidor**. Depositar USDT e transferir para a carteira **Futuros USDⓈ-M**.
+4. **Instalar** — no Droplet, abra o **Console** (navegador) e rode:
+   ```
+   git clone https://github.com/leandroaduan-prog/robo-binance.git && cd robo-binance && sudo bash install.sh
+   ```
+   O script pede as chaves (não aparecem na tela), instala e liga o robô em modo **REAL**, reiniciando sozinho se o servidor reiniciar.
+5. **Conferir** — no Telegram chega "Robô iniciado em modo REAL" com o IP do servidor. Mande `/status`.
 
-### 3. Render, primeiro em modo simulação (10 min)
-1. Em render.com: **New → Blueprint** → conecte o repositório `robo-binance`.
-2. O Render lê o `render.yaml`: worker **Starter** (~US$ 7/mês), região **Frankfurt**, `DRY_RUN=true`.
-3. Preencha `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID`. Nas chaves da Binance, coloque `x` por enquanto.
-4. Crie o serviço. Ele vai dar erro de chave, o que é esperado nesta etapa.
-5. No serviço, abra **Connect → Outbound** e anote os **IPs de saída**.
+**Comandos no servidor:** ver logs `journalctl -u robo-binance -f` · reiniciar `systemctl restart robo-binance` · atualizar `cd ~/robo-binance && git pull && systemctl restart robo-binance` · trocar chaves `nano /etc/robo-binance.env`.
 
-### 4. Chave da API na Binance (10 min)
-1. Na conta principal: **Subcontas → Gestão de API** da subconta do robô → **Criar API** (tipo "gerada pelo sistema").
-2. Permissões: **Leitura + Futuros**. **Nunca** habilite saque nem transferência.
-3. **Restrinja o acesso aos IPs do Render** anotados no passo 3.
-4. Cole a API Key e a Secret **direto nas variáveis do Render** (`BINANCE_API_KEY`, `BINANCE_API_SECRET`). **Nunca cole essas chaves em chat.**
-5. Salve. O Render reinicia e você recebe no Telegram: **"Robô iniciado em modo SIMULAÇÃO"**.
-
-> Se a Binance não deixar criar chave para a subconta de IA, crie uma subconta comum e transfira o saldo para ela.
-> Se aparecer erro 451 ("restricted location"), troque a região do serviço para Singapore e atualize os IPs na chave.
-
-### 5. Simulação por 24–48h
-- O robô avisa os sinais e as entradas que faria, sem enviar ordens.
-- Use `/status` e `/checklist` para conferir se está tudo funcionando.
-
-### 6. Ligar o modo real
-1. As posições antigas (SUI e BNB, abertas fora do robô) são tratadas como manuais: o robô não mexe nelas, mas elas ocupam vaga. O ideal é ligar depois que elas fecharem.
-2. No Render, mude `DRY_RUN` para `false` e salve.
-3. No Telegram deve aparecer **"Robô iniciado em modo REAL"**.
-
-### Ajustes sem mexer no código (variáveis do Render)
+### Ajustes sem mexer no código (arquivo /etc/robo-binance.env)
 `MARGIN_PCT` (0.375) · `LEVERAGE` (2) · `MAX_POSITIONS` (2) · `TP1_PCT` (0.02) · `TP1_FRACTION` (0.5) · `TRAIL_CALLBACK` (1.0) · `MAX_HOURS` (48) · `MIN_SCORE` (4) · `SYMBOLS`
 
 ## Como o robô se protege
