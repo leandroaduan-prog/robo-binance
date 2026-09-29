@@ -15,6 +15,7 @@ Robô 100% automático que segue as regras validadas nos backtests. Roda num ser
 | Saída 1 | **50% no +2%** (LIMIT reduce-only) |
 | Saída 2 | **50% em trailing stop de 1%**, ativado no +2% (fica na própria Binance) |
 | Prazo | O que sobrar fecha a mercado em **48h** |
+| Exceção | Se no prazo de 48h a posição estiver **15%+ abaixo da entrada** (sem ter batido o TP1), ela **não fecha**: fica com uma ordem de saída no zero a zero e **libera a vaga**. Fecha ao voltar ao zero ou em **10 dias**. Máx. 1 por vez. Desligar: `EXC_ENABLED=false` |
 | Stop de prejuízo | **Não tem** (testado: todos os níveis pioraram o resultado) |
 | Prioridade | Se houver mais sinais que vagas, entra o de maior volume relativo |
 
@@ -27,9 +28,15 @@ Robô 100% automático que segue as regras validadas nos backtests. Roda num ser
 
 **Backtest ($1.000):** 30 dias +48% · 115 dias +101% · 3 anos +257% (pior queda −63%, zero liquidações). Resultado passado não garante resultado futuro.
 
+## Painel web
+Ligar (uma vez, no Console do servidor): `cd ~/robo-binance && sudo bash painel.sh`
+Depois abra `http://IP-DO-SERVIDOR:8080` (usuário `robo`, senha criada). Mostra banca, evolução, resultado por dia, posições abertas e histórico. Somente leitura, atualiza a cada 60 s.
+
 ## Comandos no Telegram
 
 - `/status` — banca, posições e ordens pendentes
+- `/resumo` — resultado de hoje, 7 dias, total e taxa de acerto (também chega sozinho todo dia às 21h)
+- `/historico` — últimas 10 operações fechadas
 - `/checklist` — pontuação de cada ativo agora
 - `/pausar` — para de abrir novas entradas (as posições abertas continuam sendo geridas)
 - `/retomar` — volta a abrir entradas
@@ -53,7 +60,7 @@ A Binance exige chave com IP fixo para operar; por isso o robô roda num servido
 **Comandos no servidor:** ver logs `journalctl -u robo-binance -f` · reiniciar `systemctl restart robo-binance` · atualizar `cd ~/robo-binance && git pull && systemctl restart robo-binance` · trocar chaves `nano /etc/robo-binance.env`.
 
 ### Ajustes sem mexer no código (arquivo /etc/robo-binance.env)
-`MARGIN_PCT` (0.375) · `LEVERAGE` (2) · `MAX_POSITIONS` (2) · `TP1_PCT` (0.02) · `TP1_FRACTION` (0.5) · `TRAIL_CALLBACK` (1.0) · `MAX_HOURS` (48) · `MIN_SCORE` (4) · `SYMBOLS`
+`EXC_ENABLED` (true) · `EXC_TRIGGER` (0.15) · `EXC_MAX_DAYS` (10) · `MARGIN_PCT` (0.375) · `LEVERAGE` (2) · `MAX_POSITIONS` (2) · `TP1_PCT` (0.02) · `TP1_FRACTION` (0.5) · `TRAIL_CALLBACK` (1.0) · `MAX_HOURS` (48) · `MIN_SCORE` (4) · `SYMBOLS`
 
 ## Como o robô se protege
 - **Ordens identificadas:** as ordens do robô começam com `rb_`. Posições com ordens de outra origem ficam intocadas.

@@ -103,3 +103,7 @@ class Client:
             if e.code == -4046:  # já está isolada
                 return None
             raise
+
+    def income(self, symbol=None, start=None, income_type=None, limit=1000):
+        return self.signed("GET", "/fapi/v1/income", symbol=symbol, startTime=start,
+                           incomeType=income_type, limit=limit)
