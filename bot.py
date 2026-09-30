@@ -405,8 +405,9 @@ class Robo:
             print(f"[{hora(now)}] banca ${bal:.2f} | vagas {slots} | {linha}", flush=True)
             if self.paused or slots <= 0:
                 return
-            cands = sorted(((v[2], s) for s, v in sc.items() if v[0] >= C.MIN_SCORE and s not in busy), reverse=True)
-            for _, sym in cands:
+            # prioridade: maior pontuação (5/5 antes de 4/5); desempate pelo maior volume relativo
+            cands = sorted(((v[0], v[2], s) for s, v in sc.items() if v[0] >= C.MIN_SCORE and s not in busy), reverse=True)
+            for _, _, sym in cands:
                 if slots <= 0:
                     break
                 if self.place_entry(sym, bal, avail, hour, sc[sym][1], sc[sym][0]):
