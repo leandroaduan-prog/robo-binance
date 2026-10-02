@@ -19,6 +19,7 @@ import strategy as S
 from binance import BinanceError, Client
 from telegram import Telegram
 import journal
+import shared
 import stats
 
 H = 3_600_000
@@ -382,6 +383,7 @@ class Robo:
             if now > self.dry_entries[sym]["t"] + C.ENTRY_VALID_HOURS * H:
                 del self.dry_entries[sym]
         busy |= set(self.dry_entries)
+        shared.publish(busy)
 
         # diário: banca por hora, reconciliação e resumo diário
         hour = now - now % H
@@ -396,7 +398,7 @@ class Robo:
             self.tg.send(stats.summary_text(bal))
 
         # sinais a cada hora fechada
-        if self.last_signal_hour != hour and now - hour >= 20_000:
+        if self.last_signal_hour != hour and now - hour >= 20_000 + C.SIGNAL_DELAY_SEC * 1000:
             self.last_signal_hour = hour
             self.ensure_setup(pos, orders)
             slots = C.MAX_POSITIONS - len(busy - exc_syms)
@@ -406,12 +408,19 @@ class Robo:
             if self.paused or slots <= 0:
                 return
             # prioridade: maior pontuação (5/5 antes de 4/5); desempate pelo maior volume relativo
-            cands = sorted(((v[0], v[2], s) for s, v in sc.items() if v[0] >= C.MIN_SCORE and s not in busy), reverse=True)
-            for _, _, sym in cands:
-                if slots <= 0:
-                    break
-                if self.place_entry(sym, bal, avail, hour, sc[sym][1], sc[sym][0]):
-                    slots -= 1
+            with shared.lock():
+                peers = shared.peers_busy()
+                for s in sorted(peers & {k for k, v in sc.items() if v[0] >= C.MIN_SCORE} - busy):
+                    print(f"[{hora(now)}] {s} com sinal, mas já está em uso no outro robô — pulando", flush=True)
+                cands = sorted(((v[0], v[2], s) for s, v in sc.items()
+                                if v[0] >= C.MIN_SCORE and s not in busy and s not in peers), reverse=True)
+                for _, _, sym in cands:
+                    if slots <= 0:
+                        break
+                    if self.place_entry(sym, bal, avail, hour, sc[sym][1], sc[sym][0]):
+                        slots -= 1
+                        busy.add(sym)
+                shared.publish(busy)
 
     # ---------------- diário ----------------
     def record_close(self, sym, now):
@@ -493,7 +502,7 @@ def main():
     if C.PANEL_PASSWORD:
         import dashboard
         dashboard.start(robo)
-    robo.tg.send(f"🤖 Robô iniciado em modo {'SIMULAÇÃO (não envia ordens)' if C.DRY_RUN else 'REAL'}\n"
+    robo.tg.send(f"🤖 {C.ROBOT_NAME} iniciado em modo {'SIMULAÇÃO (não envia ordens)' if C.DRY_RUN else 'REAL'}\n"
                  f"{', '.join(s.replace('USDT','') for s in C.SYMBOLS)} · {C.MARGIN_PCT*100:g}% · {C.LEVERAGE}x · máx {C.MAX_POSITIONS}\n"
                  f"Saída: {C.TP1_FRACTION*100:g}% em +{C.TP1_PCT*100:g}% + trailing {C.TRAIL_CALLBACK:g}% · prazo {C.MAX_HOURS:g}h\n"
                  f"Exceção: {'ligada' if C.EXC_ENABLED else 'desligada'} (−{C.EXC_TRIGGER*100:g}% no prazo → espera o zero até {C.EXC_MAX_DAYS:g} dias)\n"

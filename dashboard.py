@@ -146,7 +146,7 @@ def page():
     mode = "SIMULAÇÃO" if C.DRY_RUN else "REAL"
     return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="60">
-<title>Painel do Robô</title><style>
+<title>Painel — {C.ROBOT_NAME}</title><style>
 :root{{--bg:#f6f6f4;--card:#fcfcfb;--line:#e4e3de;--t1:#0b0b0b;--t2:#52514e;--t3:#8a897f;--up:#2a78d6;--down:#e34948;--series:#2a78d6}}
 @media (prefers-color-scheme:dark){{:root{{--bg:#111110;--card:#1a1a19;--line:#2e2e2b;--t1:#fff;--t2:#c3c2b7;--t3:#8f8e85;--up:#3987e5;--down:#e66767;--series:#3987e5}}}}
 *{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:var(--t1);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}}
@@ -165,7 +165,7 @@ th{{font-size:12px;color:var(--t2);font-weight:600}}.up{{color:var(--t1)}}.up::b
 .down{{color:var(--t1)}}.down::before{{content:"▼ ";color:var(--down);font-size:.75em}}.muted{{color:var(--t3)}}.exc{{font-weight:600}}
 .val.up::before,.val.down::before{{font-size:.55em}}footer{{font-size:12px;color:var(--t3);margin-top:8px}}
 </style></head><body><main>
-<header><h1>Painel do Robô</h1><span class="badge">modo {mode} · {C.LEVERAGE}x · {C.MARGIN_PCT*100:g}% · máx {C.MAX_POSITIONS} · exceção {'ligada' if C.EXC_ENABLED else 'desligada'}</span></header>
+<header><h1>Painel — {C.ROBOT_NAME}</h1><span class="badge">modo {mode} · {C.LEVERAGE}x · {C.MARGIN_PCT*100:g}% · máx {C.MAX_POSITIONS} · exceção {'ligada' if C.EXC_ENABLED else 'desligada'}</span></header>
 <div class="tiles">{tiles}</div>
 <div class="card"><h2>Evolução da banca</h2>{equity_svg(s['bals'])}</div>
 <div class="card"><h2>Resultado por dia (últimos 14 dias)</h2>{daily_svg(s['days'])}</div>

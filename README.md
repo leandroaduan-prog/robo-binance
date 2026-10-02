@@ -17,7 +17,7 @@ Robô 100% automático que segue as regras validadas nos backtests. Roda num ser
 | Prazo | O que sobrar fecha a mercado em **48h** |
 | Exceção | Se no prazo de 48h a posição estiver **15%+ abaixo da entrada** (sem ter batido o TP1), ela **não fecha**: fica com uma ordem de saída no zero a zero e **libera a vaga**. Fecha ao voltar ao zero ou em **10 dias**. Máx. 1 por vez. Desligar: `EXC_ENABLED=false` |
 | Stop de prejuízo | **Não tem** (testado: todos os níveis pioraram o resultado) |
-| Prioridade | Se houver mais sinais que vagas, entra o de maior volume relativo |
+| Prioridade | Se houver mais sinais que vagas, entra primeiro o de maior pontuação (5/5 antes de 4/5); empate decidido pelo maior volume relativo |
 
 **Checklist (1 ponto cada):**
 1. BTC (1h) acima da média dos 50 fechamentos diários;
@@ -31,6 +31,16 @@ Robô 100% automático que segue as regras validadas nos backtests. Roda num ser
 ## Painel web
 Ligar (uma vez, no Console do servidor): `cd ~/robo-binance && sudo bash painel.sh`
 Depois abra `http://IP-DO-SERVIDOR:8080` (usuário `robo`, senha criada). Mostra banca, evolução, resultado por dia, posições abertas e histórico. Somente leitura, atualiza a cada 60 s.
+
+## Robô 2 (mesmo servidor)
+Mesmas regras, moedas **BCH, BNB, LTC, NEAR, SOL, UNI**, em outra subconta da Binance e com outro bot do Telegram. Painel na porta **8081**.
+
+**Sem moeda repetida:** os robôs do mesmo servidor avisam um ao outro quais moedas estão usando (posição, exceção ou ordem pendente). Se o robô 1 está em BNB ou SOL, o robô 2 não entra nela, e vice-versa. O robô 1 decide primeiro a cada hora (o 2 espera 60 s). Desligar: `AVOID_PEER_DUPES=false`.
+Instalar (no Console do servidor):
+```
+cd ~ && git clone https://github.com/leandroaduan-prog/robo-binance.git robo-binance-2 && cd robo-binance-2 && sudo bash install2.sh
+```
+Logs: `journalctl -u robo-binance-2 -f` · atualizar: `cd ~/robo-binance-2 && git pull && systemctl restart robo-binance-2`
 
 ## Comandos no Telegram
 

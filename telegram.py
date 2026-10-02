@@ -8,6 +8,9 @@ class Telegram:
         self.offset = None
 
     def send(self, text):
+        import config as C
+        if C.ROBOT_NAME != "Robô" and not text.startswith("🤖"):
+            text = f"[{C.ROBOT_NAME}] " + text
         print("[TG]", text.replace("\n", " | "), flush=True)
         if not self.token or not self.chat_id:
             return

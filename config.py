@@ -32,6 +32,11 @@ PANEL_PASSWORD = _env("PANEL_PASSWORD", "")
 PANEL_PORT = int(_env("PANEL_PORT", "8080"))
 DATA_DIR = _env("DATA_DIR", "data")
 DAILY_SUMMARY_HOUR_BRT = int(_env("DAILY_SUMMARY_HOUR_BRT", "21"))
+ROBOT_NAME = _env("ROBOT_NAME", "Robô")  # nome que aparece no Telegram e no painel
+# Vários robôs no mesmo servidor: não abrir entrada numa moeda que outro robô já está usando
+AVOID_PEER_DUPES = _env("AVOID_PEER_DUPES", "true").lower() in ("1", "true", "sim", "yes")
+SHARED_DIR = _env("SHARED_DIR", "/var/lib/robo-shared")
+SIGNAL_DELAY_SEC = int(_env("SIGNAL_DELAY_SEC", "0"))  # robô 2 usa 60 para o robô 1 decidir primeiro
 
 # Exceção: posição que chega ao prazo muito no negativo não fecha; espera voltar ao zero (com limite)
 EXC_ENABLED = _env("EXC_ENABLED", "true").lower() in ("1", "true", "sim", "yes")
